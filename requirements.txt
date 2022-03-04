@@ -1,0 +1,2 @@
+# installs the package from setup.py
+.
