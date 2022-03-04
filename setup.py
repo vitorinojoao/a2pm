@@ -20,5 +20,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["a2pm", "a2pm.patterns"],
-    install_requires=["sklearn", "numpy"],
+    install_requires=["numpy>=1.22.2", "scikit-learn>=0.24.2"],
 )

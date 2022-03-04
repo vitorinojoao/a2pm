@@ -1,0 +1,21 @@
+# Read the Docs configuration
+version: 2
+
+# Set the version of Python
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.9"
+
+# Build documentation with Sphinx
+sphinx:
+  configuration: docs/source/conf.py
+
+# Optionally build in PDF format:
+formats:
+  - pdf
+
+# Declare the Python requirements
+python:
+  install:
+    - requirements: docs/source/requirements.txt
