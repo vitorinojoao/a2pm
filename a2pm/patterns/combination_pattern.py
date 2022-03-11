@@ -32,16 +32,31 @@ class CombinationPattern(BasePattern):
         Set to None to not lock any feature.
 
     probability : float, in the (0.0, 1.0] interval
-        Probability of applying the pattern.
+        Probability of applying the pattern in `transform`.
+
+        Set to 1 to always apply the pattern.
 
     momentum : float, in the [0.0, 1.0] interval
-        Momentum of the partial updates.
+        Momentum of the `partial_fit` updates.
+
+        Set to 1 to remain fully adapted to the initial data, without updates.
+
+        Set to 0 to always fully adapt to new data, as in `fit`.
 
     seed : int, None or a generator
         Seed for reproducible random number generation.
 
-        Set to None to disable reproducibility, or
-        set to a generator to use it unaltered.
+        Set to None to disable reproducibility,
+        or to a generator to use it unaltered.
+
+    Attributes
+    ----------
+    valid_cmbs_ : numpy array of combinations
+        The valid combinations recorded by the feature analysis of this pattern.
+        Only available after a call to `fit` or `partial_fit`.
+
+    generator : numpy generator object
+        The random number generator used by this pattern.
     """
 
     def __init__(

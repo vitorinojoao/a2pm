@@ -44,21 +44,40 @@ class IntervalPattern(BasePattern):
 
     missing_value : float or None
         Value to be considered as missing when found in a feature,
-        preventing its perfurbation.
+        preventing its perturbation.
 
         Set to None to perturb all found values.
 
     probability : float, in the (0.0, 1.0] interval
-        Probability of applying the pattern.
+        Probability of applying the pattern in `transform`.
+
+        Set to 1 to always apply the pattern.
 
     momentum : float, in the [0.0, 1.0] interval
-        Momentum of the partial updates.
+        Momentum of the `partial_fit` updates.
+
+        Set to 1 to remain fully adapted to the initial data, without updates.
+
+        Set to 0 to always fully adapt to new data, as in `fit`.
 
     seed : int, None or a generator
         Seed for reproducible random number generation.
 
-        Set to None to disable reproducibility, or
-        set to a generator to use it unaltered.
+        Set to None to disable reproducibility,
+        or to a generator to use it unaltered.
+
+    Attributes
+    ----------
+    moving_mins_ : numpy array of numbers
+        The minimum values recorded by the feature analysis of this pattern.
+        Only available after a call to `fit` or `partial_fit`.
+
+    moving_maxs_ : numpy array of numbers
+        The maximum values recorded by the feature analysis of this pattern.
+        Only available after a call to `fit` or `partial_fit`.
+
+    generator : numpy generator object
+        The random number generator used by this pattern.
     """
 
     def __init__(
@@ -298,7 +317,7 @@ class IntervalPattern(BasePattern):
         ----------
         missing_value : float or None
             Value to be considered as missing when found in a feature,
-            preventing its perfurbation.
+            preventing its perturbation.
 
             Set to None to perturb all found values.
 
@@ -308,7 +327,7 @@ class IntervalPattern(BasePattern):
             If the parameters do not fulfill the constraints.
         """
         # if float(missing_value) != missing_value:
-        #     raise ValueError("Missing value must be numeric.")
+        #     raise ValueError("Missing value must be numerical.")
 
         self.missing_value = missing_value
 

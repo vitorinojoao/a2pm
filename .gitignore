@@ -1,6 +1,7 @@
+docs/build/
 .vscode/
 .ignore/
-docs/build/
+demos/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

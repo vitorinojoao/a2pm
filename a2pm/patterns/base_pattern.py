@@ -8,31 +8,50 @@ from sklearn.base import BaseEstimator
 class BasePattern(BaseEstimator):
     """Base Perturbation Pattern.
 
-    All patterns should implement the `fit`, `partial_fit` and `transform` methods,
-    in addition to inheriting these base parameters and methods.
+    A pattern should be a class inheriting the parameters and methods
+    of this base class, like the patterns of this package do.
+    This base class cannot be directly utilized.
 
-    Partial updates should be performed when the
-    `partial_fit` or `partial_fit_transform` methods are called.
+    All patterns must implement the `fit`, `partial_fit` and `transform`
+    methods so they can be fully adapted, partially adapted and applied
+    to data, according to the following signatures:
+
+    `fit(self, X, y=None) -> self`
+
+    `partial_fit(self, X, y=None) -> self`
+
+    `transform(self, X) -> numpy array`
 
     Parameters
     ----------
     features : int, array-like or None
         Index or array-like of indices of features
-        whose values are to be perturbed.
+        whose values are to be analyzed and perturbed.
 
         Set to None to use all features.
 
     probability : float, in the (0.0, 1.0] interval
-        Probability of applying the pattern.
+        Probability of applying the pattern in `transform`.
+
+        Set to 1 to always apply the pattern.
 
     momentum : float, in the [0.0, 1.0] interval
-        Momentum of the partial updates.
+        Momentum of the `partial_fit` updates.
+
+        Set to 1 to remain fully adapted to the initial data, without updates.
+
+        Set to 0 to always fully adapt to new data, as in `fit`.
 
     seed : int, None or a generator
         Seed for reproducible random number generation.
 
-        Set to None to disable reproducibility, or
-        set to a generator to use it unaltered.
+        Set to None to disable reproducibility,
+        or to a generator to use it unaltered.
+
+    Attributes
+    ----------
+    generator : numpy generator object
+        The random number generator to be used by an inheriting class.
     """
 
     def __init__(
@@ -129,7 +148,11 @@ class BasePattern(BaseEstimator):
         Parameters
         ----------
         momentum : float, in the [0.0, 1.0] interval
-            Momentum of the partial updates.
+            Momentum of the `partial_fit` updates.
+
+            Set to 1 to remain fully adapted to the initial data, without updates.
+
+            Set to 0 to always fully adapt to new data, as in `fit`.
 
         Raises
         ------
@@ -147,7 +170,9 @@ class BasePattern(BaseEstimator):
         Parameters
         ----------
         probability : float, in the (0.0, 1.0] interval
-            Probability of applying the pattern.
+            Probability of applying the pattern in `transform`.
+
+            Set to 1 to always apply the pattern.
 
         Raises
         ------

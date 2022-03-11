@@ -63,13 +63,20 @@ def create_pattern_tuple(pattern, seed=None):
 
     seed : int, None or a generator
         Seed for reproducible random number generation. If provided:
+
         - For pattern configurations, it will override any configured seed.
+
         - For already created patterns, it will not have any effect.
 
     Returns
     -------
     tuple
         Created tuple of patterns.
+
+    Raises
+    ------
+    ValueError
+        If a valid tuple could not be created.
     """
     if not isinstance(pattern, tuple):
         pattern = (pattern,)

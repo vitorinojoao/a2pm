@@ -1,22 +1,23 @@
 """Adaptative Perturbation Pattern Method module."""
 
 import copy
+import time
 import numpy as np
 from sklearn.base import BaseEstimator
 from .patterns import create_pattern_tuple
 
 
 class A2PMethod(BaseEstimator):
-    """Adaptative Perturbation Pattern Method (A2PM).
+    """Adaptative Perturbation Pattern Method.
 
-    A2PM is a gray-box method for the generation of realistic adversarial examples.
-    It relies on pattern sequences that are independently adapted to the characteristics
-    of each class to create valid and coherent data perturbations.
+    A2PM generates realistic adversarial examples by assigning an independent
+    sequence of adaptative perturbation patterns to each class, which analyze
+    specific feature subsets to create valid and coherent data perturbations.
 
-    Note: To apply class-specific perturbation patterns, the class of each sample must
-    be identified. Therefore, either a class discriminator function should be specified
-    or the `y` parameter should be provided to the `fit`, `partial_fit`, `transform`
-    and `generate` methods, for internal use only.
+    Note: To apply class-specific patterns, the class of each sample must be
+    identified. Therefore, either a class discriminator function should be
+    specified or the `y` parameter should be provided to the `fit`,
+    `partial_fit`, `transform` and `generate` methods, for internal use only.
 
     Parameters
     ----------
@@ -46,14 +47,19 @@ class A2PMethod(BaseEstimator):
 
         Set to None to impose the use of the `y` parameter on all required methods.
 
-        To provide out-of-the-box compatibility, the default function is `lambda x: -1`.
+        The default function is the following:
+
+        `lambda x: -1`
+
         Therefore, when no function is specified and the `y` parameter is not
         provided to a method, all samples will be assigned to the same default class.
-        This class has the `-1` id to prevent overlapping with regular classes.
+        To prevent overlapping with regular classes, it has the `-1` id.
 
     seed : int, None or a generator (default None)
         Seed for reproducible random number generation. If provided:
+
         - For pattern configurations, it will override any configured seed;
+
         - For already created patterns, it will not have any effect.
 
     Attributes
@@ -170,7 +176,7 @@ class A2PMethod(BaseEstimator):
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data.
+            Adversarial data, with the same class assignments as input data.
 
             If quantity > 1, the resulting array will be tiled:
 
@@ -303,7 +309,7 @@ class A2PMethod(BaseEstimator):
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data.
+            Adversarial data, with the same class assignments as input data.
 
             If quantity > 1, the resulting array will be tiled.
             If `keep_original` is signalled, the resulting array will be of shape
@@ -344,7 +350,7 @@ class A2PMethod(BaseEstimator):
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data.
+            Adversarial data, with the same class assignments as input data.
 
             If quantity > 1, the resulting array will be tiled.
             If `keep_original` is signalled, the resulting array will be of shape
@@ -414,8 +420,8 @@ class A2PMethod(BaseEstimator):
         X,
         y=None,
         y_target=None,
-        patience=5,
-        max_iterations=50,
+        iterations=10,
+        patience=2,
         callback=None,
     ) -> np.ndarray:
         """Applies the method to perform adversarial attacks against a classifier.
@@ -447,32 +453,45 @@ class A2PMethod(BaseEstimator):
 
             Set to None to perform an untargeted attack.
 
-        patience : int, >= 0 (default 5)
+        iterations : int, > 0 (default 10)
+            The maximum number of iterations that can be
+            performed before ending the attack.
+
+        patience : int, >= 0 (default 2)
             The patience for early stopping. Corresponds to the number of
             iterations with no further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
-        max_iterations : int, > 0 (default 50)
-            The maximum number of iterations that can be
-            performed before ending the attack.
+        callback : callable or list of callables
+            Callback function to be called before the attack starts (iteration 0),
+            and after any performed attack iterations (iteration 1, 2, ...).
 
-        callback : callable
-            Callback function to be called before the attack (iteration 0), and after
-            any performed attack iterations (iteration 1, 2, ...).
+            `callback(**kwargs)`
 
-            `callback(X_current, counter, iteration)`
+            `callback(X, iteration, samples_left, samples_misclassified, nanoseconds)`
 
-            It receives three parameters:
+            It can receive five parameters:
+
             - the current data (input data at iteration 0, and then adversarial data);
-            - the current counter of iterations with no further misclassifications;
-            - the current iteration.
+
+            - the current attack iteration;
+
+            - the number of samples left to be misclassified;
+
+            - the number of samples misclassified in the current iteration;
+
+            - the number of nanoseconds consumed in the current iteration.
+
+            For example, a simple function to print the number of iterations can be:
+
+            `def callback(**kwargs): print(kwargs["iteration"])`
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples, n_features)
-            Adversarial data.
+            Adversarial data, in the same order as input data.
         """
         if not hasattr(self, "classes_"):
             raise ValueError("A2PMethod has not been fitted.")
@@ -483,15 +502,27 @@ class A2PMethod(BaseEstimator):
                 + " ready to provide class predictions (be already fitted)."
             )
 
+        if int(iterations) != iterations or iterations < 1:
+            raise ValueError("Maximum number of iterations must be at least 1.")
+
         if int(patience) != patience or patience < 0:
             raise ValueError(
                 "Early stopping patience must be at least 1, or 0 to disable it."
             )
+
         if patience == 0:
             patience = -1
 
-        if int(max_iterations) != max_iterations or max_iterations < 1:
-            raise ValueError("Maximum number of iterations must be at least 1.")
+        to_target = y_target is not None
+        to_callback = callback is not None
+
+        if to_callback:
+            if not isinstance(callback, list):
+                callback = [callback]
+
+            for func in callback:
+                if not callable(func):
+                    raise ValueError("A callback function must be callable.")
 
         # Note: If y is not provided, the class discriminator function is called
         X, y = self.__get_valid_X_y(X, y)
@@ -501,7 +532,7 @@ class A2PMethod(BaseEstimator):
         if isinstance(y, map):
             y = np.array(list(y))
 
-        if y_target is not None:
+        if to_target:
             y_target = np.array(y_target)
 
             if y_target.ndim != 1 or y_target.shape[0] != X.shape[0]:
@@ -515,7 +546,7 @@ class A2PMethod(BaseEstimator):
 
         if y_orig.ndim != 1 or y_orig.shape[0] != X.shape[0]:
             raise ValueError(
-                "Array-like of class predictions must be"
+                "Array-like of classifier predictions must be"
                 + " in the (n_samples, ) shape."
             )
 
@@ -525,12 +556,11 @@ class A2PMethod(BaseEstimator):
         # Create default mask to select all rows
         mask = [True for i in range(X.shape[0])]
 
-        if y_target is not None:
+        if to_target:
             # Update mask to remove rows already predicted as the target class
-            # cls_mask = [False if val == target_class else True for val in y_orig]
             cls_mask = y_orig != y_target
 
-            # Behaviour of np.logical_and(cls_bools, bools)
+            # Similar to np.logical_and(mask, cls_mask)
             mask = list(map(lambda a, b: True if a and b else False, mask, cls_mask))
 
         # Update mask to remove rows of classes assigned to a None pattern
@@ -541,25 +571,33 @@ class A2PMethod(BaseEstimator):
                     map(lambda a, b: True if a and b else False, mask, cls_mask)
                 )
 
-        counter = np.count_nonzero(mask)
-        repetitions = 0
-        iteration = 0
-        # times = []
-        while counter != 0 and repetitions != patience and iteration != max_iterations:
-            if callback is not None:
-                callback(X, counter, iteration)
+        # Initialize looping variables
+        num_left = np.count_nonzero(mask)
+        num_reps = num_iter = iter_diff = iter_time = 0
+
+        while num_left != 0 and num_reps != patience and num_iter != iterations:
 
             # Apply mask to list of row indices
             i_rows = i_rows[mask]
 
-            # start_time = time.process_time_ns()
+            if to_callback:
+                for func in callback:
+                    func(
+                        X=X,
+                        iteration=num_iter,
+                        samples_left=num_left,
+                        samples_misclassified=iter_diff,
+                        nanoseconds=iter_time,
+                    )
+                start_time = time.process_time_ns()
 
             # Apply perturbation patterns to create perturbed rows
             X[i_rows] = self.transform(
                 X=X[i_rows], y=y[i_rows], quantity=1, keep_original=False
             )
 
-            # times.append(time.process_time_ns() - start_time)
+            if to_callback:
+                iter_time = time.process_time_ns() - start_time
 
             # Obtain new class predictions for perturbed rows
             y_pred = np.array(classifier.predict(X[i_rows]))
@@ -570,34 +608,37 @@ class A2PMethod(BaseEstimator):
                     + " in the (n_samples, ) shape."
                 )
 
-            if y_target is None:
+            if to_target:
+                # Create new mask to remove rows misclassified as the target class
+                mask = y_pred != y_target[i_rows]
+            else:
                 # Create new mask to remove misclassified rows
                 mask = y_pred == y_orig[i_rows]
+
+            previous = num_left
+            num_left = np.count_nonzero(mask)
+
+            if num_left != previous:
+                # Fewer rows left to be misclassified
+                num_reps = 0
+                if to_callback:
+                    iter_diff = previous - num_left
+
             else:
-                # Create new mask to remove rows predicted as the target class
-                # mask = y_pred != target_class
-                mask = y_pred != y_target[i_rows]
+                # Iteration without further misclassifications
+                num_reps += 1
 
-            new_counter = np.count_nonzero(mask)
+            num_iter += 1
 
-            if new_counter != counter:
-                # Update number of rows left to be misclassified
-                counter = new_counter
-                repetitions = 0
-            else:
-                # Increase number of repeated values found
-                repetitions += 1
-
-            iteration += 1
-
-        if callback is not None:
-            callback(X, counter, iteration)
-
-        # print("\nNanoseconds:")
-        # print(times)
-        # print("\nNanoseconds mean:")
-        # print(np.mean(np.array(times)))
-        # print()
+        if to_callback:
+            for func in callback:
+                func(
+                    X=X,
+                    iteration=num_iter,
+                    samples_left=num_left,
+                    samples_misclassified=iter_diff,
+                    nanoseconds=iter_time,
+                )
 
         return X
 
@@ -607,8 +648,8 @@ class A2PMethod(BaseEstimator):
         X,
         y=None,
         y_target=None,
-        patience=5,
-        max_iterations=50,
+        iterations=10,
+        patience=2,
         callback=None,
     ) -> np.ndarray:
         """Fully adapts the method to new data,
@@ -646,35 +687,32 @@ class A2PMethod(BaseEstimator):
 
             Set to None to perform an untargeted attack.
 
-        patience : int, >= 0 (default 5)
+        iterations : int, > 0 (default 10)
+            The maximum number of iterations that can be
+            performed before ending the attack.
+
+        patience : int, >= 0 (default 2)
             The patience for early stopping. Corresponds to the number of
             iterations with no further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
-        max_iterations : int, > 0 (default 50)
-            The maximum number of iterations that can be
-            performed before ending the attack.
+        callback : callable or list of callables
+            Callback function to be called before the attack starts (iteration 0),
+            and after any performed attack iterations (iteration 1, 2, ...).
 
-        callback : callable
-            Callback function to be called before the attack (iteration 0), and after
-            any performed attack iterations (iteration 1, 2, ...).
+            `callback(**kwargs)`
 
-            `callback(X_current, counter, iteration)`
-
-            It receives three parameters:
-            - the current data (input data at iteration 0, and then adversarial data);
-            - the current counter of iterations with no further misclassifications;
-            - the current iteration.
+            `callback(X, iteration, samples_left, samples_misclassified, nanoseconds)`
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples, n_features)
-            Adversarial data.
+            Adversarial data, in the same order as input data.
         """
         return self.fit(X, y).generate(
-            classifier, X, y, y_target, patience, max_iterations, callback
+            classifier, X, y, y_target, iterations, patience, callback
         )
 
     def partial_fit_generate(
@@ -683,8 +721,8 @@ class A2PMethod(BaseEstimator):
         X,
         y=None,
         y_target=None,
-        patience=5,
-        max_iterations=50,
+        iterations=10,
+        patience=2,
         callback=None,
     ) -> np.ndarray:
         """Partially adapts the method to new data,
@@ -721,35 +759,32 @@ class A2PMethod(BaseEstimator):
 
             Set to None to perform an untargeted attack.
 
-        patience : int, >= 0 (default 5)
+        iterations : int, > 0 (default 10)
+            The maximum number of iterations that can be
+            performed before ending the attack.
+
+        patience : int, >= 0 (default 2)
             The patience for early stopping. Corresponds to the number of
             iterations with no further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
-        max_iterations : int, > 0 (default 50)
-            The maximum number of iterations that can be
-            performed before ending the attack.
+        callback : callable or list of callables
+            Callback function to be called before the attack starts (iteration 0),
+            and after any performed attack iterations (iteration 1, 2, ...).
 
-        callback : callable
-            Callback function to be called before the attack (iteration 0), and after
-            any performed attack iterations (iteration 1, 2, ...).
+            `callback(**kwargs)`
 
-            `callback(X_current, counter, iteration)`
-
-            It receives three parameters:
-            - the current data (input data at iteration 0, and then adversarial data);
-            - the current counter of iterations with no further misclassifications;
-            - the current iteration.
+            `callback(X, iteration, samples_left, samples_misclassified, nanoseconds)`
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples, n_features)
-            Adversarial data.
+            Adversarial data, in the same order as input data.
         """
         return self.partial_fit(X, y).generate(
-            classifier, X, y, y_target, patience, max_iterations, callback
+            classifier, X, y, y_target, iterations, patience, callback
         )
 
     def __get_valid_X_y(self, X, y=None):
