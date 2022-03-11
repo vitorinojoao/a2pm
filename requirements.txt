@@ -1,2 +1,2 @@
-# installs the package from setup.py
+# Install the package from setup.py
 .

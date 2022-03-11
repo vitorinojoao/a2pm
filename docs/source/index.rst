@@ -12,6 +12,7 @@ A2PM Documentation
    :caption: Package
 
    package/a2pm
+   package/a2pm.callbacks
    package/a2pm.patterns
 
 .. toctree::
