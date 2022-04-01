@@ -22,7 +22,7 @@ copyright = "2022 João Vitorino (GECAD/ISEP/IPP)"
 author = "João Vitorino"
 
 # The full version, including alpha/beta/rc tags
-release = "1.1.0"
+release = "1.1.1"
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,22 +1,22 @@
-a2pm.patterns
-=============
+Patterns
+========
 
-a2pm.patterns.BasePattern
--------------------------
+BasePattern
+-----------
 
 .. autoclass:: a2pm.patterns.BasePattern
    :members:
    :show-inheritance:
 
-a2pm.patterns.CombinationPattern
---------------------------------
+CombinationPattern
+------------------
 
 .. autoclass:: a2pm.patterns.CombinationPattern
    :members:
    :show-inheritance:
 
-a2pm.patterns.IntervalPattern
------------------------------
+IntervalPattern
+---------------
 
 .. autoclass:: a2pm.patterns.IntervalPattern
    :members:

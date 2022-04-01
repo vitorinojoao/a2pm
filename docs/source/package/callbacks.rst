@@ -1,22 +1,22 @@
-a2pm.callbacks
-==============
+Callbacks
+=========
 
-a2pm.callbacks.BaseCallback
----------------------------
+BaseCallback
+------------
 
 .. autoclass:: a2pm.callbacks.BaseCallback
    :members:
    :show-inheritance:
 
-a2pm.callbacks.MetricCallback
------------------------------
+MetricCallback
+--------------
 
 .. autoclass:: a2pm.callbacks.MetricCallback
    :members:
    :show-inheritance:
 
-a2pm.callbacks.TimeCallback
----------------------------
+TimeCallback
+------------
 
 .. autoclass:: a2pm.callbacks.TimeCallback
    :members:

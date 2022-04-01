@@ -1,5 +1,5 @@
-a2pm.A2PMethod
-==============
+A2PMethod
+=========
 
 .. autoclass:: a2pm.A2PMethod
    :members:

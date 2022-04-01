@@ -6,14 +6,15 @@ It benefits from a modular architecture to assign an independent sequence of
 adaptative perturbation patterns to each class, which analyze specific feature
 subsets to create valid and coherent data perturbations.
 
-This method performs a time efficient example generation that can be advantageous
-for both adversarial training and attacks against machine learning classifiers.
-This Python 3 implementation provides out-of-the-box compatibility with the
-well-established Scikit-learn library.
+This method was developed to address the diverse constraints of domains with
+tabular data, such as cybersecurity. It can be advantageous for adversarial
+attacks against machine learning classifiers, as well as for adversarial
+training strategies. This Python 3 implementation provides out-of-the-box
+compatibility with the well-established Scikit-learn library.
 
-Research article: `https://arxiv.org/abs/2203.04234 <https://arxiv.org/abs/2203.04234>`_
+Research article: `https://doi.org/10.3390/fi14040108 <https://doi.org/10.3390/fi14040108>`_
 
-Complete documentation: `https://a2pm.readthedocs.io/en/latest <https://a2pm.readthedocs.io/en/latest/>`_
+Official documentation: `https://a2pm.readthedocs.io/en/latest <https://a2pm.readthedocs.io/en/latest/>`_
 
 Source code repository: `https://github.com/vitorinojoao/a2pm <https://github.com/vitorinojoao/a2pm>`_
 
@@ -75,7 +76,7 @@ pattern sequences, which have several possible parameters:
 
    method = A2PMethod(pattern)
 
-To enable complex scenarios with custom patterns, it is fully configurable:
+To support domains with complex constraints, the method is highly configurable:
 
 .. code:: python
 
@@ -88,8 +89,8 @@ To enable complex scenarios with custom patterns, it is fully configurable:
        # A pattern configuration
        {
            "type": MyCustomPattern,
-           "param_1": 3,
-           "param_2": 4,
+           "param_name_1": 3,
+           "param_name_2": 4,
        },
    )
 
@@ -97,15 +98,15 @@ To enable complex scenarios with custom patterns, it is fully configurable:
    preassigned_patterns = {
 
        # None to disable the perturbation of this class
-       "ClassLabel1": None,
+       "class_label_1": None,
 
        # Specific pattern sequence that will be applied to this class
-       "ClassLabel2": (
+       "class_label_2": (
            MyCustomPattern(5, 6),
            {
                "type": MyCustomPattern,
-               "param_1": 7,
-               "param_2": 8,
+               "param_name_1": 7,
+               "param_name_2": 8,
            },
        ),
    }
@@ -129,8 +130,8 @@ methods, as well as their respective shortcuts:
    # Adapts to new data, and then performs a targeted attack against a classifier
    X_adversarial = method.fit_generate(classifier, X, y, y_target)
 
-To analyze specific aspects of an adversarial attack, callback functions can be called before
-the attack starts (iteration 0) and after any A2PM iterations (iteration 1, 2, ...):
+To analyze specific aspects of the method, callback functions can be called before
+the attack starts (iteration 0) and after each attack iteration (iteration 1, 2, ...):
 
 .. code:: python
 
@@ -142,10 +143,10 @@ the attack starts (iteration 0) and after any A2PM iterations (iteration 1, 2, .
        callback=[
 
            # Time consumption
-           TimeCallback(),
+           TimeCallback(verbose=2),
 
            # Evaluation metrics
-           MetricCallback(classifier, y, scorers),
+           MetricCallback(classifier, y, scorers, verbose=2),
 
            # An instantiated callback
            MyCustomCallback(),
