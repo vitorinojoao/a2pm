@@ -1,7 +1,7 @@
 """Interval Perturbation Pattern module."""
 
 import numpy as np
-from .base_pattern import BasePattern
+from a2pm.patterns.base_pattern import BasePattern
 
 
 class IntervalPattern(BasePattern):
@@ -153,16 +153,16 @@ class IntervalPattern(BasePattern):
             # Update moving maximums and minimums
             if self.momentum != 1.0:
                 self.moving_mins_ = (self.moving_mins_ * self.momentum) + (
-                    np.min(X_filtered, axis=0) * (1.0 - self.momentum)
+                    np.amin(X_filtered, axis=0) * (1.0 - self.momentum)
                 )
                 self.moving_maxs_ = (self.moving_maxs_ * self.momentum) + (
-                    np.max(X_filtered, axis=0) * (1.0 - self.momentum)
+                    np.amax(X_filtered, axis=0) * (1.0 - self.momentum)
                 )
 
         else:
             # Setup initial maximums and minimums
-            self.moving_mins_ = np.min(X_filtered, axis=0)
-            self.moving_maxs_ = np.max(X_filtered, axis=0)
+            self.moving_mins_ = np.amin(X_filtered, axis=0)
+            self.moving_maxs_ = np.amax(X_filtered, axis=0)
 
         return self
 

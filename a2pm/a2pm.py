@@ -1,10 +1,10 @@
 """Adaptative Perturbation Pattern Method module."""
 
-import copy
-import time
 import numpy as np
+from copy import deepcopy
+from time import process_time_ns
 from sklearn.base import BaseEstimator
-from .patterns import create_pattern_tuple
+from a2pm.patterns.patterns import create_pattern_tuple
 
 
 class A2PMethod(BaseEstimator):
@@ -137,7 +137,7 @@ class A2PMethod(BaseEstimator):
             The current A2PMethod instance.
         """
         # Note 1: If y is not provided, the class discriminator function is called
-        # Note 2: If A2PMethd has not been fitted yet, also performs a setup
+        # Note 2: If A2PMethod has not been fitted yet, also performs a setup
         X, rows_per_class = self.__get_row_indices_per_class(X, y)
 
         for i_cls in range(len(self.classes_)):
@@ -362,7 +362,7 @@ class A2PMethod(BaseEstimator):
             )
 
         # Note 1: If y is not provided, the class discriminator function is called
-        # Note 2: If A2PMethd has not been fitted yet, also performs a setup
+        # Note 2: If A2PMethod has not been fitted yet, also performs a setup
         X, rows_per_class = self.__get_row_indices_per_class(X, y)
 
         if quantity == 1:
@@ -466,7 +466,7 @@ class A2PMethod(BaseEstimator):
 
         callback : callable or list of callables
             Callback function to be called before the attack starts (iteration 0),
-            and after any performed attack iterations (iteration 1, 2, ...).
+            and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
 
@@ -589,7 +589,7 @@ class A2PMethod(BaseEstimator):
                         samples_misclassified=iter_diff,
                         nanoseconds=iter_time,
                     )
-                start_time = time.process_time_ns()
+                start_time = process_time_ns()
 
             # Apply perturbation patterns to create perturbed rows
             X[i_rows] = self.transform(
@@ -597,7 +597,7 @@ class A2PMethod(BaseEstimator):
             )
 
             if to_callback:
-                iter_time = time.process_time_ns() - start_time
+                iter_time = process_time_ns() - start_time
 
             # Obtain new class predictions for perturbed rows
             y_pred = np.array(classifier.predict(X[i_rows]))
@@ -700,7 +700,7 @@ class A2PMethod(BaseEstimator):
 
         callback : callable or list of callables
             Callback function to be called before the attack starts (iteration 0),
-            and after any performed attack iterations (iteration 1, 2, ...).
+            and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
 
@@ -772,7 +772,7 @@ class A2PMethod(BaseEstimator):
 
         callback : callable or list of callables
             Callback function to be called before the attack starts (iteration 0),
-            and after any performed attack iterations (iteration 1, 2, ...).
+            and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
 
@@ -823,10 +823,11 @@ class A2PMethod(BaseEstimator):
 
         return X, y
 
-    def __get_row_indices_per_class(self, X, y):
+    def __get_row_indices_per_class(self, X, y=None):
         # Private method: Obtains valid X and a list of 'row indices per class'.
-        # If A2PMethod has not been fitted yet, performs a setup of the pre-assigned
-        # patterns and assigns the default pattern for new found classes.
+        # If A2PMethod has not been fitted yet, also performs a setup
+        # of the pre-assigned patterns and assigns
+        # the default pattern to new found classes.
         # Returns: Tuple[np.ndarray, list]
 
         X, y = self.__get_valid_X_y(X, y)
@@ -839,7 +840,7 @@ class A2PMethod(BaseEstimator):
             if self.preassigned_patterns is not None:
                 for cls, ptn in self.preassigned_patterns.items():
 
-                    cls = copy.deepcopy(cls)
+                    cls = deepcopy(cls)
                     if ptn is not None:
                         ptn = create_pattern_tuple(ptn, self.seed)
 

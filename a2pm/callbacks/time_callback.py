@@ -1,6 +1,6 @@
 """Time Attack Callback module."""
 
-from .base_callback import BaseCallback
+from a2pm.callbacks.base_callback import BaseCallback
 
 
 class TimeCallback(BaseCallback):
@@ -48,7 +48,8 @@ class TimeCallback(BaseCallback):
                         + " nanoseconds per created example."
                     )
 
-                ds = "\nTime consumption of iteration {}:  ".format(kwargs["iteration"])
+                ds = "\nTime consumption of iteration {}  =  ".format(kwargs["iteration"])
             else:
                 ds = "\n"
+
             print("{}{}".format(ds, value))

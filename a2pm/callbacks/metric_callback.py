@@ -2,7 +2,7 @@
 
 import numpy as np
 from sklearn.metrics import get_scorer
-from .base_callback import BaseCallback
+from a2pm.callbacks.base_callback import BaseCallback
 
 
 class MetricCallback(BaseCallback):
@@ -70,14 +70,18 @@ class MetricCallback(BaseCallback):
         value_tuple = []
 
         if self.verbose > 0:
-            if self.first_call and self.verbose > 1:
-                self.first_call = False
+            if self.verbose > 1:
+                if self.first_call:
+                    self.first_call = False
+                    print(
+                        "\nEvaluation metrics are measured by"
+                        + " their respective functions."
+                    )
                 print(
-                    "\nEvaluation scores are measured according"
-                    + " to their respective metrics."
+                    "\nEvaluation metrics of iteration {}:".format(kwargs["iteration"])
                 )
-
-            print()
+            else:
+                print()
 
         for description, scorer in self.scorers:
 
@@ -86,7 +90,7 @@ class MetricCallback(BaseCallback):
 
             if self.verbose > 0:
                 if self.verbose > 1:
-                    ds = description + ":  "
+                    ds = description + "  =  "
                 else:
                     ds = ""
                 print("{}{}".format(ds, value))

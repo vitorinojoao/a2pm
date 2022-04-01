@@ -6,7 +6,7 @@ with open("README.rst", "r", encoding="utf-8") as f:
 
 setup(
     name="a2pm",
-    version="1.1.0",
+    version="1.1.1",
     description="Adaptative Perturbation Pattern Method",
     long_description=long_description,
     long_description_content_type="text/x-rst",
@@ -15,7 +15,7 @@ setup(
     license="MIT",
     url="https://github.com/vitorinojoao/a2pm",
     project_urls={
-        "Article": "https://arxiv.org/abs/2203.04234",
+        "Article": "https://doi.org/10.3390/fi14040108",
         "Documentation": "https://a2pm.readthedocs.io/en/latest/",
     },
     classifiers=[
@@ -24,5 +24,5 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=["a2pm", "a2pm.callbacks", "a2pm.patterns"],
-    install_requires=["numpy>=1.22<2", "scikit-learn>=0.24<2"],
+    install_requires=["numpy>=1.17.5<2", "scikit-learn>=0.23.2<2"],
 )

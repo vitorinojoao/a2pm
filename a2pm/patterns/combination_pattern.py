@@ -1,7 +1,7 @@
 """Combination Perturbation Pattern module."""
 
 import numpy as np
-from .base_pattern import BasePattern
+from a2pm.patterns.base_pattern import BasePattern
 
 
 class CombinationPattern(BasePattern):

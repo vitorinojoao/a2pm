@@ -1,7 +1,7 @@
 """Base Perturbation Pattern module."""
 
-import copy
 import numpy as np
+from copy import deepcopy
 from sklearn.base import BaseEstimator
 
 
@@ -234,5 +234,5 @@ class BasePattern(BaseEstimator):
         ValueError
             If the parameters do not fulfill the constraints.
         """
-        self.seed = copy.deepcopy(seed)
+        self.seed = deepcopy(seed)
         self.generator = np.random.default_rng(self.seed)

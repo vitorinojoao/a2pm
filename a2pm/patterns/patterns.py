@@ -1,12 +1,14 @@
 """Perturbation Patterns module."""
 
-import copy
-from .combination_pattern import CombinationPattern
-from .interval_pattern import IntervalPattern
+from copy import deepcopy
+from a2pm.patterns.combination_pattern import CombinationPattern
+from a2pm.patterns.interval_pattern import IntervalPattern
 
 
-# Type alias for a pattern configuration
+# Type alias for a base configuration
 # PatternConfig = Union[type, str, Dict[str, Any]]
+
+# Type annotation for a parameter
 # pattern: Union[
 #     BasePattern,
 #     PatternConfig,
@@ -88,7 +90,7 @@ def create_pattern_tuple(pattern, seed=None):
 
     for p in pattern:
         if check_pattern(p, raise_error=False):
-            created.append(copy.deepcopy(p))
+            created.append(deepcopy(p))
 
         else:
             if isinstance(p, dict):
@@ -97,7 +99,7 @@ def create_pattern_tuple(pattern, seed=None):
                         "A dictionary with a perturbation pattern configuration"
                         + " must contain a 'type' key specifying its type."
                     )
-                params = copy.deepcopy(p)
+                params = deepcopy(p)
                 p = params.pop("type")
 
             else:

@@ -1,5 +1,5 @@
 """Attack Callbacks sub package."""
 
-from .base_callback import BaseCallback
-from .metric_callback import MetricCallback
-from .time_callback import TimeCallback
+from a2pm.callbacks.base_callback import BaseCallback
+from a2pm.callbacks.metric_callback import MetricCallback
+from a2pm.callbacks.time_callback import TimeCallback
