@@ -9,7 +9,7 @@ class TimeCallback(BaseCallback):
     Records the time consumption of each iteration.
 
     It is measured as nanoseconds per created example, according to
-    the total samples that could be misclassified at an iteration.
+    the total samples that could be misclassified at each iteration.
 
     Parameters
     ----------
@@ -48,7 +48,10 @@ class TimeCallback(BaseCallback):
                         + " nanoseconds per created example."
                     )
 
-                ds = "\nTime consumption of iteration {}  =  ".format(kwargs["iteration"])
+                ds = "\nTime consumption of iteration {}  =  ".format(
+                    kwargs["iteration"]
+                )
+
             else:
                 ds = "\n"
 

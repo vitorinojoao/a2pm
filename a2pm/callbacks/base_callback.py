@@ -4,11 +4,10 @@
 class BaseCallback:
     """Base Attack Callback.
 
-    A callback is not required to inherit the parameters and methods
-    of this base class, although the callbacks of this package do.
+    A callback records each iteration of the `generate` method.
     This base class cannot be directly utilized.
 
-    All callbacks should either be a function or a class implementing the
+    It must be either a function or a class implementing the
     `__call__` method, according to one of the following signatures:
 
     `__call__(self, **kwargs)`
@@ -50,6 +49,6 @@ class BaseCallback:
         if int(verbose) != verbose or verbose < 0 or verbose > 2:
             raise ValueError("Verbosity level must be in 0, 1 or 2.")
 
-        self.first_call = True
         self.verbose = verbose
+        self.first_call = True
         self.values_ = []

@@ -8,13 +8,13 @@ from sklearn.base import BaseEstimator
 class BasePattern(BaseEstimator):
     """Base Perturbation Pattern.
 
-    A pattern should be a class inheriting the parameters and methods
-    of this base class, like the patterns of this package do.
+    A pattern analyzes specific feature subsets to be fully
+    or partially adapted to data, and then create valid and
+    coherent perturbations in new data.
     This base class cannot be directly utilized.
 
-    All patterns must implement the `fit`, `partial_fit` and `transform`
-    methods so they can be fully adapted, partially adapted and applied
-    to data, according to the following signatures:
+    It must be a class implementing the `fit`, `partial_fit` and
+    `transform` methods, according to the following signatures:
 
     `fit(self, X, y=None) -> self`
 
@@ -121,7 +121,7 @@ class BasePattern(BaseEstimator):
         Parameters
         ----------
         **params : dict of 'parameter name - value' pairs
-            Valid parameters for this pattern.
+            New valid parameters for this pattern.
 
         Returns
         -------
@@ -204,10 +204,10 @@ class BasePattern(BaseEstimator):
             features = None
 
         elif isinstance(features, int):
-            features = np.full(shape=1, fill_value=features)
+            features = np.full(1, features)
 
         else:
-            features = np.array(features, dtype=np.int)
+            features = np.array(features, dtype=int)
             features = np.unique(features)
 
             if features.shape[0] == 0:

@@ -14,46 +14,49 @@ class A2PMethod(BaseEstimator):
     sequence of adaptative perturbation patterns to each class, which analyze
     specific feature subsets to create valid and coherent data perturbations.
 
-    Note: To apply class-specific patterns, the class of each sample must be
-    identified. Therefore, either a class discriminator function should be
-    specified or the `y` parameter should be provided to the `fit`,
-    `partial_fit`, `transform` and `generate` methods, for internal use only.
+    Note: Class-specific data perturbations can only be created if the
+    class of each sample is identified, either as a label or a numeric
+    representation. To obtain external Class IDs for internal use by
+    this method, there are two alternatives:
+
+    - Specify a `class_discriminator` function;
+
+    - Provide the `y` parameter to the `fit`, `partial_fit`, `transform`
+      and `generate` methods.
 
     Parameters
     ----------
     pattern : pattern, config or tuple of patterns/configs
-        Default pattern (or pattern tuple) to be used for new classes.
-        Supports configurations to create patterns,
+        Default pattern (or pattern tuple) to be adapted for each
+        new found class. Supports configurations to create patterns,
         as well as pre-fitted pattern instances.
 
-    preassigned_patterns : dict of 'class id - pattern' pairs (default None)
-        Pre-assigned mapping of specific classes to their specific patterns
-        (or pattern tuples).
-        Also supports configurations to create patterns,
-        as well as pre-fitted pattern instances.
+    preassigned_patterns : dict of 'Class ID - pattern' pairs (default None)
+        Pre-assigned mapping of specific classes to their specific
+        patterns (or pattern tuples). Also supports configurations
+        to create patterns, as well as pre-fitted pattern instances.
 
-        `{ class id : pattern, class id : (pattern, pattern), class id : None }`
+        `{ Class ID : pattern, Class ID : (pattern, pattern), Class ID : None }`
 
-        Preassign None to a specific class id to disable perturbations of that class.
+        Preassign None to a specific Class ID to disable perturbations of that class.
 
-        Set to None to start without a pre-assigned mapping and use the default pattern
-        for all new classes.
+        Set to None to disable the pre-assigned mapping, treating all classes as new.
 
     class_discriminator : callable or None (default lambda)
-        Function to be used to identify the class of a sample of input data
-        provided in `X`, in order to apply class-specific patterns.
+        Function to be used to identify the Class ID of each sample of
+        input data `X`, in order to use class-specific patterns.
 
-        `function(sample) -> class id`
+        `class_discriminator(X) -> y`
 
-        Set to None to impose the use of the `y` parameter on all required methods.
+        If no discriminator is specified and the `y` parameter is not
+        provided to a method, all samples will be assigned to the same
+        general class. To prevent overlapping with regular Class IDs,
+        that class has the `-2` ID. Therefore, the default function is:
 
-        The default function is the following:
+        `lambda X: numpy.full(X.shape[0], -2)`
 
-        `lambda x: -1`
-
-        Therefore, when no function is specified and the `y` parameter is not
-        provided to a method, all samples will be assigned to the same default class.
-        To prevent overlapping with regular classes, it has the `-1` id.
+        Set to None to disable the default function,
+        imposing the use of the `y` parameter for all methods.
 
     seed : int, None or a generator (default None)
         Seed for reproducible random number generation. If provided:
@@ -64,11 +67,11 @@ class A2PMethod(BaseEstimator):
 
     Attributes
     ----------
-    classes_ : list of 'class id'
+    classes_ : list of Class IDs
         The currently known classes.
         Only available after a call to `fit` or `partial_fit`.
 
-    class_mapping_ : dict of 'class id - pattern' pairs
+    class_mapping_ : dict of 'Class ID - pattern' pairs
         The current mapping of known classes to their respective pattern tuples.
         Only available after a call to `fit` or `partial_fit`.
     """
@@ -77,7 +80,7 @@ class A2PMethod(BaseEstimator):
         self,
         pattern,
         preassigned_patterns=None,
-        class_discriminator=lambda x: -1,
+        class_discriminator=lambda X: np.full(X.shape[0], -2),
         seed=None,
     ) -> None:
 
@@ -100,14 +103,14 @@ class A2PMethod(BaseEstimator):
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to update the class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         Returns
         -------
         self
-            The current A2PMethod instance.
+            This A2PMethod instance.
         """
         if hasattr(self, "classes_"):
             delattr(self, "classes_")
@@ -127,16 +130,16 @@ class A2PMethod(BaseEstimator):
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to update the class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         Returns
         -------
         self
-            The current A2PMethod instance.
+            This A2PMethod instance.
         """
-        # Note 1: If y is not provided, the class discriminator function is called
+        # Note 1: If y is not provided, the class discriminator is called
         # Note 2: If A2PMethod has not been fitted yet, also performs a setup
         X, rows_per_class = self.__get_row_indices_per_class(X, y)
 
@@ -162,21 +165,21 @@ class A2PMethod(BaseEstimator):
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         quantity : int, > 0 (default 1)
-            The number of examples to create for each sample.
+            Number of examples to create for each sample.
 
         keep_original : bool (default False)
             Signal to keep the original input data in the returned array,
-            in addition to the created adversarial examples.
+            in addition to the created examples.
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data, with the same class assignments as input data.
+            Adversarial data, in the same order as input data.
 
             If quantity > 1, the resulting array will be tiled:
 
@@ -194,8 +197,8 @@ class A2PMethod(BaseEstimator):
 
             ...
 
-            If `keep_original` is signalled, the resulting array will be of shape
-            (n_samples * quantity + 1, n_features) and also be tiled:
+            If `keep_original` is signalled, the resulting array will
+            contain the original input data and also be tiled:
 
             sample1
 
@@ -212,35 +215,36 @@ class A2PMethod(BaseEstimator):
             ...
         """
         if not hasattr(self, "classes_"):
-            raise ValueError("A2PMethod has not been fitted.")
+            raise AttributeError("A2PMethod has not been fitted.")
 
         if int(quantity) != quantity or quantity < 1:
             raise ValueError(
                 "Quantity of examples to create for each sample must be at least 1."
             )
 
-        # Note: If y is not provided, the class discriminator function is called
+        # Note: If y is not provided, the class discriminator is called
         X, y = self.__get_valid_X_y(X, y)
 
-        # Convert y to list of row indices per class
+        # Check for unknown classes
+        # Convert y to list of 'row indices per class'
         rows_per_class = [[] for i in range(len(self.classes_))]
         for i_row, val in enumerate(y):
-            found = False
+            not_found = True
 
             for i_cls in range(len(self.classes_)):
                 if val == self.classes_[i_cls]:
                     # Existing class
                     # Add to respective list of row indices
                     rows_per_class[i_cls].append(i_row)
-                    found = True
+                    not_found = False
                     break
 
-            if not found:
+            if not_found:
                 # Unknown class
                 raise ValueError(
-                    "Class discriminator function provided a class still"
-                    + " unknown to A2PMethod. Call 'fit' or 'partial_fit'"
-                    + " before 'transform' to assign it a pattern."
+                    "A class still unknown to A2PMethod was provided."
+                    + " Call 'fit' or 'partial_fit' before"
+                    + " 'transform' to assign it a pattern."
                 )
 
         if quantity == 1:
@@ -295,25 +299,26 @@ class A2PMethod(BaseEstimator):
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         quantity : int, > 0 (default 1)
-            The number of examples to create for each sample.
+            Number of examples to create for each sample.
 
         keep_original : bool (default False)
             Signal to keep the original input data in the returned array,
-            in addition to the created adversarial examples.
+            in addition to the created examples.
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data, with the same class assignments as input data.
+            Adversarial data, in the same order as input data.
 
             If quantity > 1, the resulting array will be tiled.
-            If `keep_original` is signalled, the resulting array will be of shape
-            (n_samples * quantity + 1, n_features) and also be tiled.
+
+            If `keep_original` is signalled, the resulting array will
+            contain the original input data and also be tiled.
         """
         if hasattr(self, "classes_"):
             delattr(self, "classes_")
@@ -336,32 +341,33 @@ class A2PMethod(BaseEstimator):
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         quantity : int, > 0 (default 1)
-            The number of examples to create for each sample.
+            Number of examples to create for each sample.
 
         keep_original : bool (default False)
             Signal to keep the original input data in the returned array,
-            in addition to the created adversarial examples.
+            in addition to the created examples.
 
         Returns
         -------
         X_adversarial : numpy array of shape (n_samples * quantity, n_features)
-            Adversarial data, with the same class assignments as input data.
+            Adversarial data, in the same order as input data.
 
             If quantity > 1, the resulting array will be tiled.
-            If `keep_original` is signalled, the resulting array will be of shape
-            (n_samples * quantity + 1, n_features) and also be tiled.
+
+            If `keep_original` is signalled, the resulting array will
+            contain the original input data and also be tiled.
         """
         if int(quantity) != quantity or quantity < 1:
             raise ValueError(
                 "Quantity of examples to create for each sample must be at least 1."
             )
 
-        # Note 1: If y is not provided, the class discriminator function is called
+        # Note 1: If y is not provided, the class discriminator is called
         # Note 2: If A2PMethod has not been fitted yet, also performs a setup
         X, rows_per_class = self.__get_row_indices_per_class(X, y)
 
@@ -430,42 +436,42 @@ class A2PMethod(BaseEstimator):
         seeking to reach a specific class. To perform a targeted attack, the class that
         should be reached for each sample must be provided in the `y_target` parameter.
 
-        Note: The misclassifications are caused on the class predictions of the
-        classifier. These predictions are independent from the class assignments
-        provided in `y` or by the `class_discriminator` function, which remain
-        for internal use only.
+        Note: The misclassifications are caused on the class predictions of
+        the classifier. These predictions are independent from the Class IDs
+        provided in `y` or by the `class_discriminator` function, which
+        remain for internal use only.
 
         Parameters
         ----------
         classifier : object with a `predict` method
-            The fitted classifier to be attacked.
+            Fitted classifier to be attacked.
 
         X : array-like in the (n_samples, n_features) shape
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         y_target : array-like in the (n_samples, ) shape or None (default None)
-            The class predictions that should be reached in a targeted attack.
+            Class predictions that should be reached in a targeted attack.
 
             Set to None to perform an untargeted attack.
 
         iterations : int, > 0 (default 10)
-            The maximum number of iterations that can be
+            Maximum number of iterations that can be
             performed before ending the attack.
 
         patience : int, >= 0 (default 2)
-            The patience for early stopping. Corresponds to the number of
-            iterations with no further misclassifications that can be
+            Patience for early stopping. Corresponds to the number of
+            iterations without further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
         callback : callable or list of callables
-            Callback function to be called before the attack starts (iteration 0),
+            List of functions to be called before the attack starts (iteration 0),
             and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
@@ -494,24 +500,23 @@ class A2PMethod(BaseEstimator):
             Adversarial data, in the same order as input data.
         """
         if not hasattr(self, "classes_"):
-            raise ValueError("A2PMethod has not been fitted.")
+            raise AttributeError("A2PMethod has not been fitted.")
 
         if not callable(getattr(classifier, "predict", None)):
-            raise ValueError(
-                "Classifier must have a 'predict' method and be"
-                + " ready to provide class predictions (be already fitted)."
+            raise AttributeError(
+                "Classifier must have a 'predict' method and be ready"
+                + " to provide class predictions (be already fitted)."
+                + " Consider using a wrapper."
             )
 
         if int(iterations) != iterations or iterations < 1:
             raise ValueError("Maximum number of iterations must be at least 1.")
 
-        if int(patience) != patience or patience < 0:
+        if int(patience) != patience or patience < 0 or patience >= iterations:
             raise ValueError(
-                "Early stopping patience must be at least 1, or 0 to disable it."
+                "Early stopping patience must be at least 1 and lower than"
+                + " the maximum number of iterations, or 0 to disable it."
             )
-
-        if patience == 0:
-            patience = -1
 
         to_target = y_target is not None
         to_callback = callback is not None
@@ -522,18 +527,13 @@ class A2PMethod(BaseEstimator):
 
             for func in callback:
                 if not callable(func):
-                    raise ValueError("A callback function must be callable.")
+                    raise AttributeError("A callback must be callable.")
 
-        # Note: If y is not provided, the class discriminator function is called
+        # Note: If y is not provided, the class discriminator is called
         X, y = self.__get_valid_X_y(X, y)
 
-        # Convert y from lazy iterator to array
-        # This y is only used to apply class-specific patterns
-        if isinstance(y, map):
-            y = np.array(list(y))
-
         if to_target:
-            y_target = np.array(y_target)
+            y_target = np.array(y_target, copy=True)
 
             if y_target.ndim != 1 or y_target.shape[0] != X.shape[0]:
                 raise ValueError(
@@ -541,8 +541,26 @@ class A2PMethod(BaseEstimator):
                     + " must be in the (n_samples, ) shape."
                 )
 
+        # Check for unknown classes
+        for val in y:
+            not_found = True
+
+            for i_cls in range(len(self.classes_)):
+                if val == self.classes_[i_cls]:
+                    # Existing class
+                    not_found = False
+                    break
+
+            if not_found:
+                # Unknown class
+                raise ValueError(
+                    "A class still unknown to A2PMethod was provided."
+                    + " Call 'fit' or 'partial_fit' before"
+                    + " 'generate' to assign it a pattern."
+                )
+
         # Record original class predictions
-        y_orig = np.array(classifier.predict(X))
+        y_orig = np.array(classifier.predict(X), copy=False)
 
         if y_orig.ndim != 1 or y_orig.shape[0] != X.shape[0]:
             raise ValueError(
@@ -554,28 +572,25 @@ class A2PMethod(BaseEstimator):
         i_rows = np.array(list(range(X.shape[0])))
 
         # Create default mask to select all rows
-        mask = [True for i in range(X.shape[0])]
+        mask = np.full(X.shape[0], True)
 
         if to_target:
             # Update mask to remove rows already predicted as the target class
-            cls_mask = y_orig != y_target
+            cls_mask = np.not_equal(y_orig, y_target)
+            mask = np.logical_and(mask, cls_mask)
 
-            # Similar to np.logical_and(mask, cls_mask)
-            mask = list(map(lambda a, b: True if a and b else False, mask, cls_mask))
-
-        # Update mask to remove rows of classes assigned to a None pattern
         for cls, ptn in self.class_mapping_.items():
+            # Update mask to remove rows of classes assigned to a None pattern
             if ptn is None:
                 cls_mask = [False if val == cls else True for val in y]
-                mask = list(
-                    map(lambda a, b: True if a and b else False, mask, cls_mask)
-                )
+                mask = np.logical_and(mask, cls_mask)
 
         # Initialize looping variables
         num_left = np.count_nonzero(mask)
-        num_reps = num_iter = iter_diff = iter_time = 0
+        num_reps = patience if patience != 0 else -1
+        num_iter = iter_diff = iter_time = 0
 
-        while num_left != 0 and num_reps != patience and num_iter != iterations:
+        while num_left != 0 and num_reps != 0 and num_iter != iterations:
 
             # Apply mask to list of row indices
             i_rows = i_rows[mask]
@@ -592,15 +607,13 @@ class A2PMethod(BaseEstimator):
                 start_time = process_time_ns()
 
             # Apply perturbation patterns to create perturbed rows
-            X[i_rows] = self.transform(
-                X=X[i_rows], y=y[i_rows], quantity=1, keep_original=False
-            )
+            X[i_rows] = self.__unchecked_transform(X[i_rows], y[i_rows])
 
             if to_callback:
                 iter_time = process_time_ns() - start_time
 
             # Obtain new class predictions for perturbed rows
-            y_pred = np.array(classifier.predict(X[i_rows]))
+            y_pred = np.array(classifier.predict(X[i_rows]), copy=False)
 
             if y_pred.ndim != 1:
                 raise ValueError(
@@ -610,23 +623,26 @@ class A2PMethod(BaseEstimator):
 
             if to_target:
                 # Create new mask to remove rows misclassified as the target class
-                mask = y_pred != y_target[i_rows]
+                mask = np.not_equal(y_pred, y_target[i_rows])
+
             else:
                 # Create new mask to remove misclassified rows
-                mask = y_pred == y_orig[i_rows]
+                mask = np.equal(y_pred, y_orig[i_rows])
 
             previous = num_left
             num_left = np.count_nonzero(mask)
 
             if num_left != previous:
-                # Fewer rows left to be misclassified
-                num_reps = 0
                 if to_callback:
                     iter_diff = previous - num_left
 
-            else:
+                if patience != 0:
+                    # Fewer rows left to be misclassified
+                    num_reps = patience
+
+            elif patience != 0:
                 # Iteration without further misclassifications
-                num_reps += 1
+                num_reps -= 1
 
             num_iter += 1
 
@@ -664,42 +680,42 @@ class A2PMethod(BaseEstimator):
         seeking to reach a specific class. To perform a targeted attack, the class that
         should be reached for each sample must be provided in the `y_target` parameter.
 
-        Note: The misclassifications are caused on the class predictions of the
-        classifier. These predictions are independent from the class assignments
-        provided in `y` or by the `class_discriminator` function, which remain
-        for internal use only.
+        Note: The misclassifications are caused on the class predictions of
+        the classifier. These predictions are independent from the Class IDs
+        provided in `y` or by the `class_discriminator` function, which
+        remain for internal use only.
 
         Parameters
         ----------
         classifier : object with a `predict` method
-            The fitted classifier to be attacked.
+            Fitted classifier to be attacked.
 
         X : array-like in the (n_samples, n_features) shape
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         y_target : array-like in the (n_samples, ) shape or None (default None)
-            The class predictions that should be reached in a targeted attack.
+            Class predictions that should be reached in a targeted attack.
 
             Set to None to perform an untargeted attack.
 
         iterations : int, > 0 (default 10)
-            The maximum number of iterations that can be
+            Maximum number of iterations that can be
             performed before ending the attack.
 
         patience : int, >= 0 (default 2)
-            The patience for early stopping. Corresponds to the number of
-            iterations with no further misclassifications that can be
+            Patience for early stopping. Corresponds to the number of
+            iterations without further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
         callback : callable or list of callables
-            Callback function to be called before the attack starts (iteration 0),
+            List of functions to be called before the attack starts (iteration 0),
             and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
@@ -711,7 +727,10 @@ class A2PMethod(BaseEstimator):
         X_adversarial : numpy array of shape (n_samples, n_features)
             Adversarial data, in the same order as input data.
         """
-        return self.fit(X, y).generate(
+        if hasattr(self, "classes_"):
+            delattr(self, "classes_")
+
+        return self.partial_fit_generate(
             classifier, X, y, y_target, iterations, patience, callback
         )
 
@@ -736,42 +755,42 @@ class A2PMethod(BaseEstimator):
         seeking to reach a specific class. To perform a targeted attack, the class that
         should be reached for each sample must be provided in the `y_target` parameter.
 
-        Note: The misclassifications are caused on the class predictions of the
-        classifier. These predictions are independent from the class assignments
-        provided in `y` or by the `class_discriminator` function, which remain
-        for internal use only.
+        Note: The misclassifications are caused on the class predictions of
+        the classifier. These predictions are independent from the Class IDs
+        provided in `y` or by the `class_discriminator` function, which
+        remain for internal use only.
 
         Parameters
         ----------
         classifier : object with a `predict` method
-            The fitted classifier to be attacked.
+            Fitted classifier to be attacked.
 
         X : array-like in the (n_samples, n_features) shape
             Input data.
 
         y : array-like in the (n_samples, ) shape or None (default None)
-            The class assignments to be used to apply class-specific patterns.
+            Class IDs of input data, to use class-specific patterns.
 
             Set to None to use the `class_discriminator` function.
 
         y_target : array-like in the (n_samples, ) shape or None (default None)
-            The class predictions that should be reached in a targeted attack.
+            Class predictions that should be reached in a targeted attack.
 
             Set to None to perform an untargeted attack.
 
         iterations : int, > 0 (default 10)
-            The maximum number of iterations that can be
+            Maximum number of iterations that can be
             performed before ending the attack.
 
         patience : int, >= 0 (default 2)
-            The patience for early stopping. Corresponds to the number of
-            iterations with no further misclassifications that can be
+            Patience for early stopping. Corresponds to the number of
+            iterations without further misclassifications that can be
             performed before ending the attack.
 
             Set to 0 to disable early stopping.
 
         callback : callable or list of callables
-            Callback function to be called before the attack starts (iteration 0),
+            List of functions to be called before the attack starts (iteration 0),
             and after each attack iteration (iteration 1, 2, ...).
 
             `callback(**kwargs)`
@@ -787,11 +806,39 @@ class A2PMethod(BaseEstimator):
             classifier, X, y, y_target, iterations, patience, callback
         )
 
+    def __unchecked_transform(self, X, y):
+        # Private method: Performs an unchecked 'transform',
+        # to speed up the attack iterations of 'generate'.
+        # Returns: np.ndarray
+
+        X_perturbed = np.copy(X)
+
+        # Convert y to list of 'row indices per class'
+        rows_per_class = [[] for i in range(len(self.classes_))]
+        for i_row, val in enumerate(y):
+            for i_cls in range(len(self.classes_)):
+                if val == self.classes_[i_cls]:
+                    # Add to respective list of row indices
+                    rows_per_class[i_cls].append(i_row)
+                    break
+
+        for i_cls in range(len(self.classes_)):
+            # Obtain pattern tuple and row indices of each class
+            ptn = self.class_mapping_[self.classes_[i_cls]]
+            i_rows = rows_per_class[i_cls]
+
+            if ptn is not None and len(i_rows) != 0:
+                # Apply pattern tuple to rows matching each class
+                for p in ptn:
+                    X_perturbed[i_rows] = p.transform(X_perturbed[i_rows])
+
+        return X_perturbed
+
     def __get_valid_X_y(self, X, y=None):
         # Private method: Obtains valid X and y.
-        # If y is not provided, the class discriminator function is called
+        # If y is not provided, the class discriminator is called
         # and y is returned as an iterator.
-        # Returns: Tuple[np.ndarray, Union[np.ndarray, map]]
+        # Returns: Tuple[np.ndarray, np.ndarray]
 
         X = np.array(X, copy=True)
 
@@ -806,20 +853,26 @@ class A2PMethod(BaseEstimator):
 
         if y is None:
             if self.class_discriminator is None:
-                raise ValueError(
-                    "Array-like of class assignments in the (n_samples, ) shape"
-                    + " must be provided in 'y' when class discriminator is None."
+                raise AttributeError(
+                    "Array-like of Class IDs in the (n_samples, ) shape"
+                    + " must be provided in 'y' when 'class_discriminator' is None."
                 )
-            y = map(self.class_discriminator, X)
 
-        else:
-            y = np.array(y)
-
-            if y.ndim != 1 or y.shape[0] != X.shape[0]:
-                raise ValueError(
-                    "Array-like of class assignments provided in 'y'"
-                    + " must be in the (n_samples, ) shape."
+            elif not callable(self.class_discriminator):
+                raise AttributeError(
+                    "A 'class_discriminator' must be callable."
+                    + " Consider using a wrapper."
                 )
+
+            y = self.class_discriminator(X)
+
+        y = np.array(y, copy=False)
+
+        if y.ndim != 1 or y.shape[0] != X.shape[0]:
+            raise ValueError(
+                "Array-like of Class IDs provided in 'y'"
+                + " must be in the (n_samples, ) shape."
+            )
 
         return X, y
 
@@ -849,20 +902,21 @@ class A2PMethod(BaseEstimator):
             # Setup id list of classes
             self.classes_ = list(self.class_mapping_.keys())
 
-        # Convert y to list of row indices per class
+        # Check for unknown classes
+        # Convert y to list of 'row indices per class'
         rows_per_class = [[] for i in range(len(self.classes_))]
         for i_row, val in enumerate(y):
-            found = False
+            not_found = True
 
             for i_cls in range(len(self.classes_)):
                 if val == self.classes_[i_cls]:
                     # Existing class
                     # Add to respective list of row indices
                     rows_per_class[i_cls].append(i_row)
-                    found = True
+                    not_found = False
                     break
 
-            if not found:
+            if not_found:
                 # Unknown class
                 # Add new list of row indices
                 self.classes_.append(val)

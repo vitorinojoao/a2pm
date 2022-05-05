@@ -160,7 +160,7 @@ class CombinationPattern(BasePattern):
             Perturbed data.
         """
         if not hasattr(self, "valid_cmbs_"):
-            raise ValueError("Pattern has not been fitted.")
+            raise AttributeError("Pattern has not been fitted.")
 
         X = np.array(X, copy=True)
 
@@ -208,11 +208,7 @@ class CombinationPattern(BasePattern):
                         size=None,
                         replace=False,
                     )
-                    # teste = np.copy(X_filtered[i])
                     X_filtered[i] = self.valid_cmbs_[i_cmb]
-                    # print(np.array_equal(teste, X_filtered[i]))
-                    # print()
-                    # sleep(0.01)
 
         if self.features is None:
             X = X_filtered
@@ -268,10 +264,10 @@ class CombinationPattern(BasePattern):
             locked_features = None
 
         elif isinstance(locked_features, int):
-            locked_features = np.full(shape=1, fill_value=locked_features)
+            locked_features = np.full(1, locked_features)
 
         else:
-            locked_features = np.array(locked_features, dtype=np.int)
+            locked_features = np.array(locked_features, dtype=int)
             locked_features = np.unique(locked_features)
 
             if locked_features.shape[0] == 0:

@@ -8,21 +8,21 @@ from a2pm.callbacks.base_callback import BaseCallback
 class MetricCallback(BaseCallback):
     """Metric Attack Callback.
 
-    Records the score of one or more metrics.
+    Records the score of one or more metrics at each iteration.
 
     The metrics are measured according to their respective scorer functions.
 
     Parameters
     ----------
     classifier : object with a `predict` method
-        The fitted classifier to be evaluated,
+        Fitted classifier to be evaluated,
         which should be the same classifier being attacked.
 
     y : array-like in the (n_samples, ) shape or None (default None)
-        The ground truth classes that the classifier should predict.
+        Ground truth classes that the classifier should predict.
 
     scorers : list of tuples of 'description, scorer'
-        The tuples of custom metric descriptions and respective scorer functions.
+        Tuples of custom metric descriptions and respective scorer functions.
 
         Besides an actual scorer function, a Scikit-learn compatible description
         is also supported.
@@ -53,15 +53,15 @@ class MetricCallback(BaseCallback):
     ):
         super().__init__(verbose)
 
-        self.y = np.array(y)
-
         if not callable(getattr(classifier, "predict", None)):
-            raise ValueError(
-                "Classifier must have a 'predict' method and be"
-                + " ready to provide class predictions (be already fitted)."
+            raise AttributeError(
+                "Classifier must have a 'predict' method and be ready"
+                + " to provide class predictions (be already fitted)."
+                + " Consider using a wrapper."
             )
-        self.classifier = classifier
 
+        self.y = np.array(y)
+        self.classifier = classifier
         self.scorers = [
             (str(description), get_scorer(scorer)) for description, scorer in scorers
         ]
@@ -77,9 +77,11 @@ class MetricCallback(BaseCallback):
                         "\nEvaluation metrics are measured by"
                         + " their respective functions."
                     )
+
                 print(
                     "\nEvaluation metrics of iteration {}:".format(kwargs["iteration"])
                 )
+
             else:
                 print()
 
@@ -91,8 +93,10 @@ class MetricCallback(BaseCallback):
             if self.verbose > 0:
                 if self.verbose > 1:
                     ds = description + "  =  "
+
                 else:
                     ds = ""
+
                 print("{}{}".format(ds, value))
 
         self.values_.append(tuple(value_tuple))

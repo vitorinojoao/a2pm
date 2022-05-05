@@ -180,7 +180,7 @@ class IntervalPattern(BasePattern):
             Perturbed data.
         """
         if not hasattr(self, "moving_mins_"):
-            raise ValueError("Pattern has not been fitted.")
+            raise AttributeError("Pattern has not been fitted.")
 
         X = np.array(X, copy=True)
 
@@ -198,11 +198,12 @@ class IntervalPattern(BasePattern):
             X_filtered = X[:, self.features]
 
         if self.__integer_idcs is None:
+            # Consider all features as floats
             for j in range(X_filtered.shape[1]):
-                # Check if each feature can be perturbed
                 min_value = self.moving_mins_[j]
                 max_value = self.moving_maxs_[j]
 
+                # Check if each feature can be perturbed
                 if min_value != max_value:
                     for i in range(X_filtered.shape[0]):
                         if self.to_apply():
@@ -215,11 +216,12 @@ class IntervalPattern(BasePattern):
                             )
 
         else:
+            # Consider some features as integers
             for j in range(X_filtered.shape[1]):
-                # Check if each feature can be perturbed
                 min_value = self.moving_mins_[j]
                 max_value = self.moving_maxs_[j]
 
+                # Check if each feature can be perturbed
                 if min_value != max_value:
                     for i in range(X_filtered.shape[0]):
                         if self.to_apply():
@@ -228,7 +230,11 @@ class IntervalPattern(BasePattern):
                                 X_filtered[i, j],
                                 min_value,
                                 max_value,
-                                np.isin(j, self.__integer_idcs, assume_unique=True),
+                                np.isin(
+                                    j,
+                                    self.__integer_idcs,
+                                    assume_unique=True,
+                                ),
                             )
 
         if self.features is None:
@@ -389,10 +395,10 @@ class IntervalPattern(BasePattern):
             integer_features = None
 
         elif isinstance(integer_features, int):
-            integer_features = np.full(shape=1, fill_value=integer_features)
+            integer_features = np.full(1, integer_features)
 
         else:
-            integer_features = np.array(integer_features, dtype=np.int)
+            integer_features = np.array(integer_features, dtype=int)
             integer_features = np.unique(integer_features)
 
             if integer_features.shape[0] == 0:
