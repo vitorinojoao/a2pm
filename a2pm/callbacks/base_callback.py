@@ -4,7 +4,8 @@
 class BaseCallback:
     """Base Attack Callback.
 
-    A callback records each iteration of the `generate` method.
+    A callback records and/or prints specific values of
+    each attack iteration of the `generate` method.
     This base class cannot be directly utilized.
 
     It must be either a function or a class implementing the
@@ -26,7 +27,7 @@ class BaseCallback:
 
     - the number of nanoseconds consumed in the current iteration.
 
-    For example, a simple function to print the number of iterations can be:
+    For example, a simple function to print each iteration can be:
 
     `def callback(**kwargs): print(kwargs["iteration"])`
 

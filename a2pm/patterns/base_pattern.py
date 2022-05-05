@@ -8,8 +8,8 @@ from sklearn.base import BaseEstimator
 class BasePattern(BaseEstimator):
     """Base Perturbation Pattern.
 
-    A pattern analyzes specific feature subsets to be fully
-    or partially adapted to data, and then create valid and
+    A pattern analyzes specific feature subsets to fully
+    or partially adapt itself, and then create valid and
     coherent perturbations in new data.
     This base class cannot be directly utilized.
 

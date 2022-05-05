@@ -6,7 +6,7 @@ A2PM Documentation
 | A2PM is the outcome of research activities carried out at:
 | Research Group on Intelligent Engineering and Computing for Advanced Innovation
 | and Development (GECAD), School of Engineering, Polytechnic of Porto (ISEP/IPP),
-| Porto, Portugal.
+| 4249-015 Porto, Portugal.
 
 .. toctree::
    :maxdepth: 2

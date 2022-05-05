@@ -38,9 +38,9 @@ class A2PMethod(BaseEstimator):
 
         `{ Class ID : pattern, Class ID : (pattern, pattern), Class ID : None }`
 
-        Preassign None to a specific Class ID to disable perturbations of that class.
+        Preassign None to a Class ID to disable perturbations of that class.
 
-        Set to None to disable the pre-assigned mapping, treating all classes as new.
+        Set to None to disable pre-assignments, treating all classes as new.
 
     class_discriminator : callable or None (default lambda)
         Function to be used to identify the Class ID of each sample of
@@ -490,7 +490,7 @@ class A2PMethod(BaseEstimator):
 
             - the number of nanoseconds consumed in the current iteration.
 
-            For example, a simple function to print the number of iterations can be:
+            For example, a simple function to print each iteration can be:
 
             `def callback(**kwargs): print(kwargs["iteration"])`
 
