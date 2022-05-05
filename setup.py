@@ -6,7 +6,7 @@ with open("README.rst", "r", encoding="utf-8") as f:
 
 setup(
     name="a2pm",
-    version="1.1.1",
+    version="1.2.0",
     description="Adaptative Perturbation Pattern Method",
     long_description=long_description,
     long_description_content_type="text/x-rst",
@@ -19,10 +19,21 @@ setup(
         "Documentation": "https://a2pm.readthedocs.io/en/latest/",
     },
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "License :: OSI Approved",
         "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Developers",
+        "Topic :: Adaptive Technologies",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Software Development",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    packages=["a2pm", "a2pm.callbacks", "a2pm.patterns"],
-    install_requires=["numpy>=1.17.5<2", "scikit-learn>=0.23.2<2"],
+    packages=["a2pm", "a2pm.callbacks", "a2pm.patterns", "a2pm.wrappers"],
+    python_requires=">=3.5",
+    install_requires=["numpy>=1.17.5,<2", "scikit-learn>=0.23.2,<2"],
 )

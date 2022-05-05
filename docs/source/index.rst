@@ -21,6 +21,7 @@ A2PM Documentation
    package/a2pmethod
    package/callbacks
    package/patterns
+   package/wrappers
 
 .. toctree::
    :maxdepth: 2

@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this method, please cite the primary research article."
+type: software
+license: MIT
+title: "Adaptative Perturbation Pattern Method"
+authors:
+  - family-names: "Vitorino"
+    given-names: "João"
+    orcid: "https://orcid.org/0000-0002-4968-3653"
+doi: 10.3390/fi14040108
+url: "https://github.com/vitorinojoao/a2pm"
+preferred-citation:
+  type: article
+  title: "Adaptative Perturbation Patterns: Realistic Adversarial Learning for Robust Intrusion Detection"
+  authors:
+    - family-names: "Vitorino"
+      given-names: "João"
+      orcid: "https://orcid.org/0000-0002-4968-3653"
+    - family-names: "Oliveira"
+      given-names: "Nuno"
+      orcid: "https://orcid.org/0000-0002-5030-7751"
+    - family-names: "Praça"
+      given-names: "Isabel"
+      orcid: "https://orcid.org/0000-0002-2519-9859"
+  doi: "10.3390/fi14040108"
+  journal: "Future Internet"
+  year: 2022
+  month: 3
+  volume: 14
+  issue: 4
+  start: 108

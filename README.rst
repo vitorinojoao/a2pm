@@ -10,13 +10,13 @@ This method was developed to address the diverse constraints of domains with
 tabular data, such as cybersecurity. It can be advantageous for adversarial
 attacks against machine learning classifiers, as well as for adversarial
 training strategies. This Python 3 implementation provides out-of-the-box
-compatibility with the well-established Scikit-learn library.
+compatibility with the Scikit-Learn library.
 
-Research article: `https://doi.org/10.3390/fi14040108 <https://doi.org/10.3390/fi14040108>`_
+If you use A2PM, please cite the primary research article: `https://doi.org/10.3390/fi14040108 <https://doi.org/10.3390/fi14040108>`_
 
-Official documentation: `https://a2pm.readthedocs.io/en/latest <https://a2pm.readthedocs.io/en/latest/>`_
+Check out the official documentation: `https://a2pm.readthedocs.io/en/latest <https://a2pm.readthedocs.io/en/latest/>`_
 
-Source code repository: `https://github.com/vitorinojoao/a2pm <https://github.com/vitorinojoao/a2pm>`_
+Explore the public source code repository: `https://github.com/vitorinojoao/a2pm <https://github.com/vitorinojoao/a2pm>`_
 
 .. figure:: https://raw.githubusercontent.com/vitorinojoao/a2pm/main/images/a2pm.png
    :alt: A2PMFigure
@@ -46,6 +46,7 @@ The package can be accessed through the following imports:
    from a2pm import A2PMethod
    from a2pm.callbacks import BaseCallback, MetricCallback, TimeCallback
    from a2pm.patterns import BasePattern, CombinationPattern, IntervalPattern
+   from a2pm.wrappers import BaseWrapper, KerasWrapper, SklearnWrapper, TorchWrapper
 
 A2PM can be created with a simple base configuration of Interval and/or Combination
 pattern sequences, which have several possible parameters:
@@ -58,7 +59,7 @@ pattern sequences, which have several possible parameters:
        {
            "type": "interval",
            "features": list(range(0, 20)),
-           "integer_features": list(range(15, 20)),
+           "integer_features": list(range(10, 20)),
            "ratio": 0.1,
            "max_ratio": 0.3,
            "missing_value": 0.0,
@@ -124,6 +125,9 @@ methods, as well as their respective shortcuts:
    # Adapts to new data, and then creates adversarial examples
    X_adversarial = method.fit_transform(X, y)
 
+   # Encapsulates a Tensorflow/Keras classification model
+   classifier = KerasWrapper(my_model, my_custom_class_labels)
+
    # Adapts to new data, and then performs an untargeted attack against a classifier
    X_adversarial = method.fit_generate(classifier, X, y)
 
@@ -140,13 +144,18 @@ the attack starts (iteration 0) and after each attack iteration (iteration 1, 2,
        X,
        y,
        y_target,
+
+       # Additional configuration
+       iterations=10,
+       patience=2,
+
        callback=[
 
            # Time consumption
            TimeCallback(verbose=2),
 
            # Evaluation metrics
-           MetricCallback(classifier, y, scorers, verbose=2),
+           MetricCallback(classifier, y, my_custom_scorers, verbose=2),
 
            # An instantiated callback
            MyCustomCallback(),
