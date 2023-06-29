@@ -11,8 +11,8 @@ class A2PMethod(BaseEstimator):
     """Adaptative Perturbation Pattern Method.
 
     A2PM generates realistic adversarial examples by assigning an independent
-    sequence of adaptative perturbation patterns to each class, which analyze
-    specific feature subsets to create valid and coherent data perturbations.
+    sequence of adaptative patterns to each class, which analyze specific
+    feature subsets to create valid and coherent data perturbations.
 
     Note: Class-specific data perturbations can only be created if the
     class of each sample is identified, either as a label or a numeric

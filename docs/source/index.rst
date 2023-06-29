@@ -3,7 +3,7 @@ A2PM Documentation
 
 | Welcome to the official documentation of the Adaptative Perturbation Pattern Method.
 
-| A2PM is the outcome of research activities carried out at:
+| A2PM is the outcome of R&D activities carried out at:
 | Research Group on Intelligent Engineering and Computing for Advanced Innovation
 | and Development (GECAD), School of Engineering, Polytechnic of Porto (ISEP/IPP),
 | 4249-015 Porto, Portugal.

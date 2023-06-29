@@ -1,9 +1,3 @@
-# Custom
-docs/build/
-.vscode/
-.ignore/
-demos/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -133,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Custom
+docs/build/
+.vscode/
+.ignore/
+demos/
